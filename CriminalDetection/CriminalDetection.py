@@ -26,31 +26,27 @@ def detect_and_encode(image):
             return boxes, faces
     return [], []
 
-# Function to encode specific images with predefined names
-def encode_known_faces(known_faces):
+# Function to encode all images in a folder
+def encode_images_from_folder(folder_path):
     known_face_encodings = []
     known_face_names = []
 
-    for name, image_path in known_faces.items():
-        known_image = cv2.imread(image_path)
-        if known_image is not None:
-            known_image_rgb = cv2.cvtColor(known_image, cv2.COLOR_BGR2RGB)
-            _, encodings = detect_and_encode(known_image_rgb)
-            if encodings:
-                known_face_encodings.append(encodings[0])  # Assuming one face per image
-                known_face_names.append(name)
+    for file_name in os.listdir(folder_path):
+        if file_name.lower().endswith(('png', 'jpg', 'jpeg')):
+            image_path = os.path.join(folder_path, file_name)
+            image = cv2.imread(image_path)
+            if image is not None:
+                image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                _, encodings = detect_and_encode(image_rgb)
+                if encodings:
+                    known_face_encodings.append(encodings[0])  # Assuming one face per image
+                    known_face_names.append(os.path.splitext(file_name)[0])  # File name without extension
 
     return known_face_encodings, known_face_names
 
-# Define known faces with explicit names
-known_faces = {
-    "Hardik bkl": "images/Hardik.jpeg",
-    # "Bob": "images/bob.jpg",
-    # "Charlie": "images/charlie.jpg"
-}
-
-# Encode known faces
-known_face_encodings, known_face_names = encode_known_faces(known_faces)
+# Encode images in the 'Images' folder
+folder_path = "Images"
+known_face_encodings, known_face_names = encode_images_from_folder(folder_path)
 
 # Function to recognize faces
 def recognize_faces(known_encodings, known_names, test_encodings, threshold=0.6):
@@ -59,14 +55,18 @@ def recognize_faces(known_encodings, known_names, test_encodings, threshold=0.6)
         distances = np.linalg.norm(known_encodings - test_encoding, axis=1)
         min_distance_idx = np.argmin(distances)
         if distances[min_distance_idx] < threshold:
-            recognized_results.append((known_names[min_distance_idx], "Criminal Detected"))
+            recognized_results.append((known_names[min_distance_idx], "Detected"))
         else:
-            recognized_results.append((None, "Not found in criminal dataset"))
+            recognized_results.append((None, "Not found"))
     return recognized_results
 
 # Start video capture
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 threshold = 0.6
+
+# Persistent flag and variable to store detected criminal's name
+criminal_detected = False
+detected_criminal_name = None
 
 while cap.isOpened():
     ret, frame = cap.read()
@@ -82,12 +82,27 @@ while cap.isOpened():
             if box is not None:
                 (x1, y1, x2, y2) = map(int, box)
                 # Set the color based on recognition status
-                color = (0, 0, 255) if label == "Criminal Detected" else (0, 255, 0)
+                color = (0, 0, 255) if label == "Detected" else (0, 255, 0)
+                if label == "Detected":
+                    criminal_detected = True
+                    detected_criminal_name = name  # Store the criminal's name
                 # Draw the bounding box
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
                 # Add the label
                 display_name = name if name else label
                 cv2.putText(frame, display_name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
+
+    # Display the criminal's name and message "FOUND!!" at the bottom if a criminal was detected
+    if criminal_detected and detected_criminal_name:
+        text = f"{detected_criminal_name.upper()} FOUND!!"
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 1.5
+        font_color = (0, 0, 255)  # Red color
+        thickness = 3
+        text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+        text_x = (frame.shape[1] - text_size[0]) // 2
+        text_y = frame.shape[0] - 20  # Position at the bottom of the frame
+        cv2.putText(frame, text, (text_x, text_y), font, font_scale, font_color, thickness, cv2.LINE_AA)
 
     cv2.imshow('Face Recognition', frame)
     if cv2.waitKey(1) & 0xFF == ord('q'):
