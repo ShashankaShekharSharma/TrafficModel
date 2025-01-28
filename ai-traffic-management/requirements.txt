@@ -1,0 +1,8 @@
+streamlit==1.32.0
+pygame==2.5.2
+g4f==0.2.1.0
+numpy==1.26.3
+pillow==10.2.0
+python-dotenv==1.0.1
+asyncio==3.4.3
+typing-extensions==4.9.0
