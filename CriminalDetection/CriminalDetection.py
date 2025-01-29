@@ -3,12 +3,8 @@ import cv2
 import numpy as np
 import torch
 from facenet_pytorch import InceptionResnetV1, MTCNN
-
-# Initialize MTCNN and InceptionResnetV1
 mtcnn = MTCNN(keep_all=True)
 resnet = InceptionResnetV1(pretrained='vggface2').eval()
-
-# Function to detect and encode faces
 def detect_and_encode(image):
     with torch.no_grad():
         boxes, _ = mtcnn.detect(image)
@@ -25,8 +21,6 @@ def detect_and_encode(image):
                 faces.append(encoding)
             return boxes, faces
     return [], []
-
-# Function to encode all images in a folder
 def encode_images_from_folder(folder_path):
     known_face_encodings = []
     known_face_names = []
@@ -39,16 +33,12 @@ def encode_images_from_folder(folder_path):
                 image_rgb = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 _, encodings = detect_and_encode(image_rgb)
                 if encodings:
-                    known_face_encodings.append(encodings[0])  # Assuming one face per image
-                    known_face_names.append(os.path.splitext(file_name)[0])  # File name without extension
+                    known_face_encodings.append(encodings[0]) 
+                    known_face_names.append(os.path.splitext(file_name)[0]) 
 
     return known_face_encodings, known_face_names
-
-# Encode images in the 'Images' folder
 folder_path = "Images"
 known_face_encodings, known_face_names = encode_images_from_folder(folder_path)
-
-# Function to recognize faces
 def recognize_faces(known_encodings, known_names, test_encodings, threshold=0.6):
     recognized_results = []
     for test_encoding in test_encodings:
@@ -59,12 +49,8 @@ def recognize_faces(known_encodings, known_names, test_encodings, threshold=0.6)
         else:
             recognized_results.append((None, "Not found"))
     return recognized_results
-
-# Start video capture
 cap = cv2.VideoCapture(0)
 threshold = 0.6
-
-# Persistent flag and variable to store detected criminal's name
 criminal_detected = False
 detected_criminal_name = None
 
@@ -81,27 +67,22 @@ while cap.isOpened():
         for (box, (name, label)) in zip(boxes, results):
             if box is not None:
                 (x1, y1, x2, y2) = map(int, box)
-                # Set the color based on recognition status
                 color = (0, 0, 255) if label == "Detected" else (0, 255, 0)
                 if label == "Detected":
                     criminal_detected = True
-                    detected_criminal_name = name  # Store the criminal's name
-                # Draw the bounding box
+                    detected_criminal_name = name  
                 cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-                # Add the label
                 display_name = name if name else label
-                cv2.putText(frame, display_name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA)
-
-    # Display the criminal's name and message "FOUND!!" at the bottom if a criminal was detected
+                cv2.putText(frame, display_name, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 1, color, 2, cv2.LINE_AA
     if criminal_detected and detected_criminal_name:
         text = f"{detected_criminal_name.upper()} FOUND!!"
         font = cv2.FONT_HERSHEY_SIMPLEX
         font_scale = 1.5
-        font_color = (0, 0, 255)  # Red color
+        font_color = (0, 0, 255) 
         thickness = 3
         text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
         text_x = (frame.shape[1] - text_size[0]) // 2
-        text_y = frame.shape[0] - 20  # Position at the bottom of the frame
+        text_y = frame.shape[0] - 20  
         cv2.putText(frame, text, (text_x, text_y), font, font_scale, font_color, thickness, cv2.LINE_AA)
 
     cv2.imshow('Face Recognition', frame)
