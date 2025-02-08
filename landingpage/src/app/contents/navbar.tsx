@@ -18,7 +18,7 @@ export default function Navbar() {
           <div className="hidden md:flex space-x-8">
             <Link href="#home" className="text-white hover:text-black hover:bg-orange-500 p-2 transition-colors rounded-lg">Home</Link>
             <Link href="#models" className="text-white  hover:text-black hover:bg-orange-500 p-2 transition-colors rounded-lg">Models</Link>
-            <Link href="#contact" className="text-white  hover:text-black hover:bg-orange-500 p-2 transition-colors rounded-lg">Contact</Link>
+            <Link href="#devs" className="text-white  hover:text-black hover:bg-orange-500 p-2 transition-colors rounded-lg">Devs</Link>
           </div>
           <div className="md:hidden">
             <button
@@ -44,7 +44,7 @@ export default function Navbar() {
           <div className="space-y-2 px-4 pt-2 pb-4 text-left">
             <Link href="#home" className="block text-white  hover:text-orange-500">Home</Link>
             <Link href="#models" className="block text-white  hover:text-orange-500">Models</Link>
-            <Link href="#contact" className="block text-white  hover:text-orange-500">Contact</Link>
+            <Link href="#devs" className="block text-white  hover:text-orange-500">Devs</Link>
           </div>
         </div>
       )}
